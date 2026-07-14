@@ -37,7 +37,8 @@ export function createToken(user) {
 }
 
 export function currentUser(event) {
-  const token = event.headers.authorization?.replace(/^Bearer\s+/i, "");
+  const authorization = typeof event.headers?.get === "function" ? event.headers.get("authorization") : event.headers?.authorization;
+  const token = authorization?.replace(/^Bearer\s+/i, "");
   if (!token || !process.env.AUTH_SECRET) return null;
   const [head, payload, signature] = token.split(".");
   const expected = createHmac("sha256", process.env.AUTH_SECRET).update(`${head}.${payload}`).digest("base64url");
