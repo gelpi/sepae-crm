@@ -4,7 +4,7 @@ import { google } from "googleapis";
 const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
 export function reply(statusCode, body) {
-  return { statusCode, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(body) };
+  return new Response(JSON.stringify(body), { status: statusCode, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 }
 
 function credentials() {
