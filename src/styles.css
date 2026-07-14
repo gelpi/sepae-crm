@@ -4,6 +4,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
 button { font: inherit; cursor: pointer; }
+.login-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, #123a31 0%, #285247 100%); }.login-card { width: min(100%, 410px); background: #fff; border-radius: 18px; padding: 38px; box-shadow: 0 24px 70px #001b143d; }.login-brand { color: #123a31; padding: 0; margin-bottom: 40px; }.login-card form { display: grid; gap: 16px; margin-top: 28px; }.login-card label { font-size: 13px; font-weight: 700; color: #40574e; display: grid; gap: 7px; }.login-card input { border: 1px solid #d6ded7; border-radius: 8px; padding: 11px 12px; font: inherit; color: #20342d; outline-color: #8aab37; }.login-card .primary { margin-top: 4px; }.login-error { color: #a13535 !important; font-size: 13px !important; margin: 0; }.logout { background: transparent; border: 0; color: #b5cabf; font-size: 11px; margin-left: auto; padding: 4px; }
 .app-shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
 .sidebar { background: #123a31; color: #eaf0e9; padding: 29px 18px 22px; display: flex; flex-direction: column; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 11px; font-weight: 700; letter-spacing: .06em; font-size: 20px; }.brand-mark { color: #123a31; background: #d7e96e; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-family: Georgia, serif; }

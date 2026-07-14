@@ -3,6 +3,7 @@ dist
 .netlify
 .env
 .env.*
+.secrets/
 data/*.xlsx
 *.tsbuildinfo
 vite.config.js
