@@ -30,6 +30,6 @@ export default async (request) => {
     }));
     const today = new Date().toLocaleDateString("en-CA");
     const options = (column) => [...new Set(visibleRows.map((row) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));
-    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6), types: options(8), members: options(5) }, metrics: { total: visibleRows.length, hoy: visibleRows.filter((row) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter((row) => row[3]).length, sinClasificar: visibleRows.filter((row) => !row[8]).length } });
+    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6), types: options(8), members: options(5), sellers: options(1) }, metrics: { total: visibleRows.length, hoy: visibleRows.filter((row) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter((row) => row[3]).length, sinClasificar: visibleRows.filter((row) => !row[8]).length } });
   } catch (error) { console.error("Contacts error", error); return reply(500, { error: "No se pudieron cargar los contactos." }); }
 };
