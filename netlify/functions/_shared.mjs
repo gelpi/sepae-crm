@@ -1,4 +1,4 @@
-import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { google } from "googleapis";
 
 const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -30,11 +30,14 @@ export function passwordMatches(password, savedHash) {
 function encode(value) { return Buffer.from(JSON.stringify(value)).toString("base64url"); }
 export function createToken(user) {
   if (!process.env.AUTH_SECRET) throw new Error("Authentication secret not configured");
-  const payload = encode({ sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 12 });
+  const payload = encode({ sub: user.id, username: user.username, role: user.role, seller: user.seller || "", exp: Math.floor(Date.now() / 1000) + 60 * 60 * 12 });
   const head = encode({ alg: "HS256", typ: "JWT" });
   const signature = createHmac("sha256", process.env.AUTH_SECRET).update(`${head}.${payload}`).digest("base64url");
   return `${head}.${payload}.${signature}`;
 }
+
+export function isAdmin(user) { return user?.role === "admin"; }
+export function createPasswordHash(password) { const salt = randomUUID().replaceAll("-", ""); return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`; }
 
 export function currentUser(event) {
   const authorization = typeof event.headers?.get === "function" ? event.headers.get("authorization") : event.headers?.authorization;
