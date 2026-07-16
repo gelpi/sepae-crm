@@ -18,6 +18,10 @@ function ContactDetail({contact,token,options,close,changed}:{contact:Contact;to
 function Metric({label,value}:{label:string;value:number}){return <article className="metric"><p>{label}</p><strong>{value.toLocaleString("es-UY")}</strong></article>}
 createRoot(document.getElementById("root")!).render(<StrictMode><App/></StrictMode>);
 
+type DashboardData = { total:number; complete:number; phone:number; unclassified:number; sellers:{label:string;value:number}[]; origins:{label:string;value:number}[]; types:{label:string;value:number}[] };
+function AdminDashboard({ token }:{token:string}) { const [data,setData]=useState<DashboardData|null>(null); useEffect(()=>{fetch("/.netlify/functions/dashboard",{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(setData)},[token]); if(!data)return <section className="admin-dashboard"><p>Cargando dashboard…</p></section>; const max=Math.max(1,...data.sellers.map(x=>x.value)); return <section className="admin-dashboard"><div className="section-heading"><div><p className="eyebrow">ADMINISTRACIÓN</p><h2>Resumen comercial</h2><p>Contactos activos; las bajas lógicas no están incluidas.</p></div></div><div className="dashboard-metrics"><Metric label="Contactos activos" value={data.total}/><Metric label="Fichas completas" value={data.complete}/><Metric label="Con teléfono" value={data.phone}/><Metric label="Sin clasificar" value={data.unclassified}/></div><div className="dashboard-grid"><DashboardList title="Por vendedora" items={data.sellers} max={max}/><DashboardList title="Principales orígenes" items={data.origins}/><DashboardList title="Tipos de contacto" items={data.types}/></div></section> }
+function DashboardList({title,items,max}:{title:string;items:{label:string;value:number}[];max?:number}) { const ceiling=max||Math.max(1,...items.map(x=>x.value)); return <article className="dashboard-card"><h3>{title}</h3>{items.map(item=><div className="bar-row" key={item.label}><span>{item.label}</span><b>{item.value}</b><i><em style={{width:`${item.value/ceiling*100}%`}}/></i></div>)}</article> }
+
 if (sessionStorage.getItem("sepae_token")) {
   const logoutButton = document.createElement("button");
   logoutButton.className = "floating-logout";
@@ -25,3 +29,5 @@ if (sessionStorage.getItem("sepae_token")) {
   logoutButton.onclick = () => { sessionStorage.clear(); window.location.reload(); };
   document.body.append(logoutButton);
 }
+
+if (sessionStorage.getItem("sepae_token") && sessionStorage.getItem("sepae_role") === "admin") setTimeout(() => { const host=document.createElement("div"); host.className="admin-dashboard-host"; document.querySelector("main")?.prepend(host); createRoot(host).render(<AdminDashboard token={sessionStorage.getItem("sepae_token")!}/>); }, 0);
