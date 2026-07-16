@@ -30,4 +30,4 @@ if (sessionStorage.getItem("sepae_token")) {
   document.body.append(logoutButton);
 }
 
-if (sessionStorage.getItem("sepae_token") && sessionStorage.getItem("sepae_role") === "admin") setTimeout(() => { const host=document.createElement("div"); host.className="admin-dashboard-host"; document.querySelector("main")?.prepend(host); createRoot(host).render(<AdminDashboard token={sessionStorage.getItem("sepae_token")!}/>); }, 0);
+if (sessionStorage.getItem("sepae_token") && sessionStorage.getItem("sepae_role") === "admin") { const mountDashboard = () => { const main = document.querySelector("main"); if (!main) return requestAnimationFrame(mountDashboard); const host = document.createElement("div"); host.className = "admin-dashboard-host"; main.prepend(host); createRoot(host).render(<AdminDashboard token={sessionStorage.getItem("sepae_token")!}/>); }; requestAnimationFrame(mountDashboard); }
