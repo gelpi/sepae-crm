@@ -9,6 +9,7 @@ export default async (request) => {
     if (!row) return reply(404, { error: "Contacto no encontrado." });
     if (user.role !== "admin" && String(row[1]).trim().toLowerCase() !== String(user.seller).trim().toLowerCase()) return reply(403, { error: "No podés modificar este contacto." });
     if (body.action === "delete") { await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}`, valueInputOption: "RAW", requestBody: { values: [[new Date().toISOString()]] } }); return reply(200, { ok: true }); }
+    if (body.action === "restore" && user.role === "admin") { await sheets.spreadsheets.values.clear({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}` }); return reply(200, { ok: true }); }
     const name = String(body.name || "").trim(), phone = digits(body.phone), document = digits(body.document);
     if (name.length < 3 || phone.length < 8 || phone.length > 15 || (document && (document.length < 6 || document.length > 12))) return reply(400, { error: "Revisá nombre, teléfono y cédula." });
     const values = [[row[0], row[1], name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type || "", row[9] || ""]];
