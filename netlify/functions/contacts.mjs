@@ -16,7 +16,8 @@ export default async (request) => {
     const visibleRows = allRows.filter(({ row }) => (user.role === "admin" || String(row[1]).trim().toLowerCase() === String(user.seller).trim().toLowerCase()) && (deleted ? Boolean(row[9]) : !row[9]));
     const filteredRows = visibleRows.filter(({ row }) => {
       const searchable = [row[2], row[3], row[4], row[7]].join(" ").toLowerCase();
-      return (!query || searchable.includes(query)) && (!origin || row[6] === origin) && (!type || row[8] === type) && (!member || row[5] === member);
+      const typeMatches = !type || (type === "Sin clasificar" ? !row[8] || row[8] === "Sin clasificar" : row[8] === type);
+      return (!query || searchable.includes(query)) && (!origin || row[6] === origin) && typeMatches && (!member || row[5] === member);
     });
     const contacts = filteredRows.slice().reverse().slice(0, 100).map(({ row, rowNumber }) => ({
       id: rowNumber,
@@ -32,6 +33,7 @@ export default async (request) => {
     }));
     const today = new Date().toLocaleDateString("en-CA");
     const options = (column) => [...new Set(visibleRows.map(({ row }) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));
-    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6), types: options(8), members: options(5), sellers: options(1) }, metrics: { total: visibleRows.length, hoy: visibleRows.filter(({ row }) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter(({ row }) => row[3]).length, sinClasificar: visibleRows.filter(({ row }) => !row[8]).length } });
+    const types = [...new Set([...options(8), "Sin clasificar"])];
+    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6), types, members: options(5), sellers: options(1) }, metrics: { total: visibleRows.length, hoy: visibleRows.filter(({ row }) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter(({ row }) => row[3]).length, sinClasificar: visibleRows.filter(({ row }) => !row[8] || row[8] === "Sin clasificar").length } });
   } catch (error) { console.error("Contacts error", error); return reply(500, { error: "No se pudieron cargar los contactos." }); }
 };

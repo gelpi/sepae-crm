@@ -12,7 +12,7 @@ export default async (request) => {
     if (body.action === "restore" && user.role === "admin") { await sheets.spreadsheets.values.clear({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}` }); return reply(200, { ok: true }); }
     const name = String(body.name || "").trim(), phone = digits(body.phone), document = digits(body.document);
     if (name.length < 3 || phone.length < 8 || phone.length > 15 || (document && (document.length < 6 || document.length > 12))) return reply(400, { error: "Revisá nombre, teléfono y cédula." });
-    const values = [[row[0], row[1], name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type || "", row[9] || ""]];
+    const values = [[row[0], row[1], name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type === "Sin clasificar" ? "" : body.type || "", row[9] || ""]];
     await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:J${rowNumber}`, valueInputOption: "USER_ENTERED", requestBody: { values } }); return reply(200, { ok: true });
   } catch (error) { console.error("Contact update error", error); return reply(500, { error: "No se pudo actualizar el contacto." }); }
 };
