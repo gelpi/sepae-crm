@@ -1,4 +1,4 @@
-import { currentUser, getSheets, reply, spreadsheetId } from "./_shared.mjs";
+import { currentUser, getSheets, LOCALITIES, reply, spreadsheetId } from "./_shared.mjs";
 
 const digits = (value) => String(value || "").replace(/\D/g, "");
 export default async (request) => {
@@ -13,10 +13,12 @@ export default async (request) => {
     if (phone.length < 8 || phone.length > 15) return reply(400, { error: "Ingresá un teléfono válido." });
     if (document && (document.length < 6 || document.length > 12)) return reply(400, { error: "La cédula no parece válida." });
     if (!seller) return reply(400, { error: "No se pudo asignar la vendedora." });
+    if (body.locality && !LOCALITIES.includes(body.locality)) return reply(400, { error: "Elegí una localidad válida." });
+    if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email).trim())) return reply(400, { error: "Ingresá un email válido." });
     const sheets = getSheets(); const existing = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!C2:E" });
     const duplicates = (existing.data.values || []).filter((row) => digits(row[1]) === phone || (document && digits(row[2]) === document));
     if (duplicates.length && !body.confirmDuplicate) return reply(409, { error: "Ya existe un contacto con ese teléfono o cédula.", duplicate: true });
-    await sheets.spreadsheets.values.append({ spreadsheetId, range: "Respuestas de formulario 1!A:L", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[new Date().toISOString(), seller, name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type === "Sin clasificar" ? "" : body.type || "", "", body.locality || "", body.birthDate || ""]] } });
+    await sheets.spreadsheets.values.append({ spreadsheetId, range: "Respuestas de formulario 1!A:N", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[new Date().toISOString(), seller, name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type === "Sin clasificar" ? "" : body.type || "", "", body.locality || "", body.birthDate || "", String(body.address || "").trim(), String(body.email || "").trim()]] } });
     return reply(201, { ok: true });
   } catch (error) { console.error("Contact create error", error); return reply(500, { error: "No se pudo guardar el contacto." }); }
 };

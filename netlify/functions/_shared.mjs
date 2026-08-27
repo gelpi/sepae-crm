@@ -2,6 +2,7 @@ import { createHmac, randomUUID, scryptSync, timingSafeEqual } from "node:crypto
 import { google } from "googleapis";
 
 const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+export const LOCALITIES = ["Treinta y tres", "Vergara", "Rincón", "Varela", "Santa Clara", "Cerro Chato", "otro"];
 
 export function reply(statusCode, body) {
   return new Response(JSON.stringify(body), { status: statusCode, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
