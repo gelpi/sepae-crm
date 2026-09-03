@@ -10,7 +10,7 @@ export default async (request) => {
   const user = currentUser(request); if (!user) return reply(401, { error: "Sesión no válida." }); if (user.role !== "admin") return reply(403, { error: "Acceso exclusivo de administración." });
   try {
     const params = new URL(request.url).searchParams; const from = params.get("from") || ""; const to = params.get("to") || "";
-    const sheets = getSheets(); const data = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:L" }); const rows = (data.data.values || []).filter((row) => !row[9]);
+    const sheets = getSheets(); const data = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:O" }); const rows = (data.data.values || []).filter((row) => !row[9]);
     const count = (column, fallback) => rows.reduce((acc, row) => { const key = row[column] || fallback; acc[key] = (acc[key] || 0) + 1; return acc; }, {});
     const complete = rows.filter((row) => row[2] && row[3] && row[6] && row[7] && row[8]).length;
     const selectedRows = rows.filter((row) => { const day = dayKey(row[0]); return (!from || day >= from) && (!to || day <= to); });

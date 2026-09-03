@@ -1,5 +1,13 @@
 import { currentUser, getSheets, LOCALITIES, reply, spreadsheetId } from "./_shared.mjs";
 
+const dateInputValue = (value) => {
+  const text = String(value || "");
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const local = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return local ? `${local[3]}-${local[2].padStart(2, "0")}-${local[1].padStart(2, "0")}` : "";
+};
+
 export default async (request) => {
   const user = currentUser(request);
   if (!user) return reply(401, { error: "Sesión no válida." });
@@ -10,15 +18,17 @@ export default async (request) => {
     const type = params.get("type") || "";
     const member = params.get("member") || "";
     const locality = params.get("locality") || "";
+    const missing = params.get("missing") || "";
     const deleted = params.get("deleted") === "1" && user.role === "admin";
     const sheets = getSheets();
-    const result = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:N" });
+    const result = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:O" });
     const allRows = (result.data.values ?? []).map((row, index) => ({ row, rowNumber: index + 2 }));
     const visibleRows = allRows.filter(({ row }) => (user.role === "admin" || String(row[1]).trim().toLowerCase() === String(user.seller).trim().toLowerCase()) && (deleted ? Boolean(row[9]) : !row[9]));
     const filteredRows = visibleRows.filter(({ row }) => {
       const searchable = [row[2], row[3], row[4], row[7], row[12], row[13]].join(" ").toLowerCase();
       const typeMatches = !type || (type === "Sin clasificar" ? !row[8] || row[8] === "Sin clasificar" : row[8] === type);
-      return (!query || searchable.includes(query)) && (!origin || row[6] === origin) && typeMatches && (!member || row[5] === member) && (!locality || row[10] === locality);
+      const missingMatches = !missing || (missing === "phone" ? !row[3] : missing === "incomplete" ? !row[3] || !row[6] || !row[10] : true);
+      return (!query || searchable.includes(query)) && (!origin || row[6] === origin) && typeMatches && (!member || row[5] === member) && (!locality || row[10] === locality) && missingMatches;
     });
     const contacts = filteredRows.slice().reverse().slice(0, 100).map(({ row, rowNumber }) => ({
       id: rowNumber,
@@ -32,9 +42,10 @@ export default async (request) => {
       tipo: row[8] || "Sin clasificar",
       socio: row[5] || "Sin dato",
       localidad: row[10] || "Sin localidad",
-      nacimiento: row[11] || "",
+      nacimiento: dateInputValue(row[11]),
       direccion: row[12] || "",
-      email: row[13] || ""
+      email: row[13] || "",
+      proximoContacto: dateInputValue(row[14])
     }));
     const today = new Date().toLocaleDateString("en-CA");
     const options = (column) => [...new Set(visibleRows.map(({ row }) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));

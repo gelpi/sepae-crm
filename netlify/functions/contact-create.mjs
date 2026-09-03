@@ -15,10 +15,11 @@ export default async (request) => {
     if (!seller) return reply(400, { error: "No se pudo asignar la vendedora." });
     if (body.locality && !LOCALITIES.includes(body.locality)) return reply(400, { error: "Elegí una localidad válida." });
     if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email).trim())) return reply(400, { error: "Ingresá un email válido." });
+    if (body.nextContact && !/^\d{4}-\d{2}-\d{2}$/.test(String(body.nextContact))) return reply(400, { error: "Elegí una fecha válida para el próximo contacto." });
     const sheets = getSheets(); const existing = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!C2:E" });
     const duplicates = (existing.data.values || []).filter((row) => digits(row[1]) === phone || (document && digits(row[2]) === document));
     if (duplicates.length && !body.confirmDuplicate) return reply(409, { error: "Ya existe un contacto con ese teléfono o cédula.", duplicate: true });
-    await sheets.spreadsheets.values.append({ spreadsheetId, range: "Respuestas de formulario 1!A:N", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[new Date().toISOString(), seller, name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type === "Sin clasificar" ? "" : body.type || "", "", body.locality || "", body.birthDate || "", String(body.address || "").trim(), String(body.email || "").trim()]] } });
+    await sheets.spreadsheets.values.append({ spreadsheetId, range: "Respuestas de formulario 1!A:O", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[new Date().toISOString(), seller, name, phone, document, body.member || "", body.origin || "", body.comment || "", body.type === "Sin clasificar" ? "" : body.type || "", "", body.locality || "", body.birthDate || "", String(body.address || "").trim(), String(body.email || "").trim(), body.nextContact || ""]] } });
     return reply(201, { ok: true });
   } catch (error) { console.error("Contact create error", error); return reply(500, { error: "No se pudo guardar el contacto." }); }
 };
