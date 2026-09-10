@@ -5,7 +5,7 @@ import "./styles.css";
 
 type Contact={id:number;nombre:string;telefono:string;document:string;vendedora:string;origen:string;comentario:string;tipo:string;socio:string;localidad:string;nacimiento:string;direccion:string;email:string;proximoContacto:string;crmId:string;tieneVentas:boolean;fecha:string};
 type Options={origins:string[];types:string[];members:string[];sellers:string[]}; type User={username:string;role:string}; type Filter={type?:string;missing?:string};
-const LOCALITIES=["Treinta y tres","Vergara","Rincón","Varela","Santa Clara","Cerro Chato","otro"];
+const LOCALITIES=["Treinta y tres","Vergara","Rincón","Varela","Santa Clara","Cerro Chato","Charqueada","otro"];
 const api=(path:string,token:string,init:RequestInit={})=>fetch(path,{...init,headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json",...(init.headers||{})}});
 const pill=(t:string)=>/caliente/i.test(t)?"pill hot":/tibio/i.test(t)?"pill warm":/fr[ií]o/i.test(t)?"pill cold":"pill neutral";
 const Empty=({children}:{children:string})=><div className="empty-state">{children}</div>;
