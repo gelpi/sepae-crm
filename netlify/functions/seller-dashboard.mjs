@@ -39,9 +39,10 @@ export default async (request) => {
     const classified = (term) => visible.filter(({ row }) => String(row[8] || "").toLowerCase() === term).length;
     const unclassified = visible.filter(({ row }) => !row[8] || String(row[8]).toLowerCase() === "sin clasificar").length;
     const noPhone = visible.filter(({ row }) => !row[3]).length;
-    const incomplete = visible.filter(({ row }) => !row[3] || !row[6] || !row[10]).length;
+    const noBirthDate = visible.filter(({ row }) => !asDay(row[11])).length;
+    const noLocality = visible.filter(({ row }) => !row[10]).length;
     return reply(200, {
-      totals:{ total:visible.length, hot:classified("caliente"), warm:classified("tibio"), cold:classified("frío") + classified("frio"), unclassified, noPhone, incomplete },
+      totals:{ total:visible.length, hot:classified("caliente"), warm:classified("tibio"), cold:classified("frío") + classified("frio"), unclassified, noPhone, noBirthDate, noLocality },
       localities:rank(visible.map(({ row }) => row), 10, "Sin localidad").slice(0, 7),
       actions:{ overdue, today:dueToday, upcoming },
       birthdays:birthdayItems

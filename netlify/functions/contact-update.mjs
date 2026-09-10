@@ -5,7 +5,7 @@ export default async (request) => {
   try {
     const body = await request.json(); const rowNumber = Number(body.id);
     if (!Number.isInteger(rowNumber) || rowNumber < 2) return reply(400, { error: "Contacto no válido." });
-    const sheets = getSheets(); const read = await sheets.spreadsheets.values.get({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:O${rowNumber}` }); const row = read.data.values?.[0];
+    const sheets = getSheets(); const read = await sheets.spreadsheets.values.get({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:P${rowNumber}` }); const row = read.data.values?.[0];
     if (!row) return reply(404, { error: "Contacto no encontrado." });
     if (user.role !== "admin" && String(row[1]).trim().toLowerCase() !== String(user.seller).trim().toLowerCase()) return reply(403, { error: "No podés modificar este contacto." });
     if (body.action === "delete") { await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}`, valueInputOption: "RAW", requestBody: { values: [[new Date().toISOString()]] } }); return reply(200, { ok: true }); }
@@ -15,11 +15,11 @@ export default async (request) => {
       if (!note) return reply(400, { error: "Contá brevemente qué hiciste para cerrar la gestión." });
       if (body.nextContact && !/^\d{4}-\d{2}-\d{2}$/.test(String(body.nextContact))) return reply(400, { error: "Elegí una fecha válida para el próximo contacto." });
       const followUpNote = body.nextContact ? `Próximo contacto programado para ${body.nextContact}.` : "Seguimiento cerrado.";
-      const values = Array.from({ length:15 }, (_, index) => row[index] || "");
+      const values = Array.from({ length:16 }, (_, index) => row[index] || "");
       values[7] = `${row[7] || ""}${row[7] ? "\n\n" : ""}${note}\n${followUpNote}\n${new Date().toLocaleDateString("es-UY")}`;
       values[8] = body.type === "Sin clasificar" ? "" : body.type || row[8] || "";
       values[14] = body.nextContact || "";
-      await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:O${rowNumber}`, valueInputOption: "USER_ENTERED", requestBody: { values:[values] } });
+      await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:P${rowNumber}`, valueInputOption: "USER_ENTERED", requestBody: { values:[values] } });
       return reply(200, { ok: true });
     }
     const name = String(body.name || "").trim(), phone = digits(body.phone), document = digits(body.document);
@@ -31,7 +31,7 @@ export default async (request) => {
     const followUpNote = body.followUp === "date" && body.nextContact ? `Próximo contacto programado para ${body.nextContact}.` : body.followUp === "" ? "Seguimiento cerrado." : "";
     const evolution = [appendComment, followUpNote].filter(Boolean).join("\n");
     const comment = evolution ? `${row[7] || ""}${row[7] ? "\n\n" : ""}${evolution}\n${new Date().toLocaleDateString("es-UY")}` : row[7] || "";
-    const values = [[row[0], row[1], name, phone, document, body.member || "", body.origin || "", comment, body.type === "Sin clasificar" ? "" : body.type || "", row[9] || "", body.locality || "", body.birthDate || "", String(body.address || "").trim(), String(body.email || "").trim(), body.nextContact || ""]];
-    await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:O${rowNumber}`, valueInputOption: "USER_ENTERED", requestBody: { values } }); return reply(200, { ok: true });
+    const values = [[row[0], row[1], name, phone, document, body.member || "", body.origin || "", comment, body.type === "Sin clasificar" ? "" : body.type || "", row[9] || "", body.locality || "", body.birthDate || "", String(body.address || "").trim(), String(body.email || "").trim(), body.nextContact || "", row[15] || ""]];
+    await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!A${rowNumber}:P${rowNumber}`, valueInputOption: "USER_ENTERED", requestBody: { values } }); return reply(200, { ok: true });
   } catch (error) { console.error("Contact update error", error); return reply(500, { error: "No se pudo actualizar el contacto." }); }
 };

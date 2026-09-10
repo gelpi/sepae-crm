@@ -21,13 +21,15 @@ export default async (request) => {
     const missing = params.get("missing") || "";
     const deleted = params.get("deleted") === "1" && user.role === "admin";
     const sheets = getSheets();
-    const result = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:O" });
+    const result = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:P" });
+    const salesResult = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Ventas!A2:F" });
+    const soldLeadIds = new Set((salesResult.data.values || []).map((row) => row[1]).filter(Boolean));
     const allRows = (result.data.values ?? []).map((row, index) => ({ row, rowNumber: index + 2 }));
     const visibleRows = allRows.filter(({ row }) => (user.role === "admin" || String(row[1]).trim().toLowerCase() === String(user.seller).trim().toLowerCase()) && (deleted ? Boolean(row[9]) : !row[9]));
     const filteredRows = visibleRows.filter(({ row }) => {
       const searchable = [row[2], row[3], row[4], row[7], row[12], row[13]].join(" ").toLowerCase();
       const typeMatches = !type || (type === "Sin clasificar" ? !row[8] || row[8] === "Sin clasificar" : row[8] === type);
-      const missingMatches = !missing || (missing === "phone" ? !row[3] : missing === "incomplete" ? !row[3] || !row[6] || !row[10] : true);
+      const missingMatches = !missing || (missing === "phone" ? !row[3] : missing === "birthDate" ? !dateInputValue(row[11]) : missing === "locality" ? !row[10] : true);
       return (!query || searchable.includes(query)) && (!origin || row[6] === origin) && typeMatches && (!member || row[5] === member) && (!locality || row[10] === locality) && missingMatches;
     });
     const contacts = filteredRows.slice().reverse().slice(0, 100).map(({ row, rowNumber }) => ({
@@ -45,7 +47,9 @@ export default async (request) => {
       nacimiento: dateInputValue(row[11]),
       direccion: row[12] || "",
       email: row[13] || "",
-      proximoContacto: dateInputValue(row[14])
+      proximoContacto: dateInputValue(row[14]),
+      crmId: row[15] || "",
+      tieneVentas: soldLeadIds.has(row[15])
     }));
     const today = new Date().toLocaleDateString("en-CA");
     const options = (column) => [...new Set(visibleRows.map(({ row }) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));
