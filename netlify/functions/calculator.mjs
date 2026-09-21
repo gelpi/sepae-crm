@@ -13,8 +13,8 @@ export default async (request) => {
     const result = await sheets.spreadsheets.values.get({ spreadsheetId, range:"Calculadora!A1:F40" });
     const rows = result.data.values || [];
     return reply(200, {
-      internacion:{ under55:block(rows, 5), over55:block(rows, 13) },
-      convalecencia:{ under55:block(rows, 24), over55:block(rows, 31) },
+      internacion:{ under55:block(rows, 4), over55:block(rows, 12) },
+      convalecencia:{ under55:block(rows, 25), over55:block(rows, 32) },
       updatedAt:"Precios vigentes según Calculadora"
     });
   } catch (error) { console.error("Calculator error", error); return reply(500, { error:"No se pudieron cargar los precios del cotizador." }); }
