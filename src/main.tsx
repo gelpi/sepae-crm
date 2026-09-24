@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import logo from "./assets/sepae_logo.jpg";
 import "./styles.css";
 import "./quote.css";
+import "./mobile-nav.css";
 
 type Contact={id:number;nombre:string;telefono:string;document:string;vendedora:string;origen:string;comentario:string;tipo:string;socio:string;localidad:string;nacimiento:string;direccion:string;email:string;proximoContacto:string;crmId:string;tieneVentas:boolean;fecha:string};
 type Options={origins:string[];types:string[];members:string[];sellers:string[]}; type User={username:string;role:string}; type Filter={type?:string;missing?:string};
