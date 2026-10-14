@@ -52,8 +52,8 @@ export default async (request) => {
       tieneVentas: soldLeadIds.has(row[15])
     }));
     const today = new Date().toLocaleDateString("en-CA");
-    const options = (column) => [...new Set(visibleRows.map(({ row }) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));
+    const options = (column, rows = visibleRows) => [...new Set(rows.map(({ row }) => row[column]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "es"));
     const types = [...new Set([...options(8), "Sin clasificar"])];
-    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6), types, members: options(5), sellers: options(1), localities: LOCALITIES }, metrics: { total: visibleRows.length, hoy: visibleRows.filter(({ row }) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter(({ row }) => row[3]).length, sinClasificar: visibleRows.filter(({ row }) => !row[8] || row[8] === "Sin clasificar").length } });
+    return reply(200, { contacts, totalFiltered: filteredRows.length, filters: { origins: options(6, allRows), types, members: options(5), sellers: options(1), localities: LOCALITIES }, metrics: { total: visibleRows.length, hoy: visibleRows.filter(({ row }) => String(row[0]).startsWith(today)).length, conTelefono: visibleRows.filter(({ row }) => row[3]).length, sinClasificar: visibleRows.filter(({ row }) => !row[8] || row[8] === "Sin clasificar").length } });
   } catch (error) { console.error("Contacts error", error); return reply(500, { error: "No se pudieron cargar los contactos." }); }
 };

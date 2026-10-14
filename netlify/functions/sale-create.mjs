@@ -9,7 +9,11 @@ export default async (request) => {
     const sheets = getSheets(); const read = await sheets.spreadsheets.values.get({ spreadsheetId, range:`Respuestas de formulario 1!A${rowNumber}:P${rowNumber}` }); const row = read.data.values?.[0];
     if (!row) return reply(404, { error:"Contacto no encontrado." });
     if (user.role !== "admin" && String(row[1]).trim().toLowerCase() !== String(user.seller).trim().toLowerCase()) return reply(403, { error:"No podés registrar una venta de este contacto." });
-    if (!row[15]) return reply(400, { error:"Este lead todavía no tiene ID CRM. Recargá e intentá nuevamente." });
+    if (row[9]) return reply(400, { error:"No podés registrar una venta de un contacto eliminado." });
+    if (!row[15]) {
+      row[15] = randomUUID();
+      await sheets.spreadsheets.values.update({ spreadsheetId, range:`Respuestas de formulario 1!P${rowNumber}`, valueInputOption:"RAW", requestBody:{ values:[[row[15]]] } });
+    }
     const note = String(body.note || "").trim(); const seller = row[1] || user.seller || user.username;
     await sheets.spreadsheets.values.append({ spreadsheetId, range:"Ventas!A:F", valueInputOption:"USER_ENTERED", insertDataOption:"INSERT_ROWS", requestBody:{ values:[[randomUUID(), row[15], row[2] || "Sin nombre", seller, saleDate, note]] } });
     const values = Array.from({ length:16 }, (_, index) => row[index] || "");

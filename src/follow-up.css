@@ -1,0 +1,4 @@
+.follow-up-modal { z-index: 30; }
+.agenda-item.agenda-actionable { display: block; }
+.agenda-actionable .agenda-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.agenda-actionable .agenda-actions button { min-height: 36px; padding: 7px 10px; }

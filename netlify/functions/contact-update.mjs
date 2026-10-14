@@ -10,8 +10,14 @@ export default async (request) => {
     if (user.role !== "admin" && String(row[1]).trim().toLowerCase() !== String(user.seller).trim().toLowerCase()) return reply(403, { error: "No podés modificar este contacto." });
     if (body.action === "delete") { await sheets.spreadsheets.values.update({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}`, valueInputOption: "RAW", requestBody: { values: [[new Date().toISOString()]] } }); return reply(200, { ok: true }); }
     if (body.action === "restore" && user.role === "admin") { await sheets.spreadsheets.values.clear({ spreadsheetId, range: `Respuestas de formulario 1!J${rowNumber}` }); return reply(200, { ok: true }); }
-    if (body.action === "follow-up") {
-      const note = String(body.newComment || "").trim();
+    if (body.action === "follow-up" || body.action === "reschedule") {
+      if (row[9]) return reply(400, { error: "El contacto está eliminado." });
+      if (body.action === "reschedule") {
+        const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montevideo" }).format(new Date());
+        const date = String(body.nextContact || "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date || date <= today) return reply(400, { error: "Elegí una fecha futura para reprogramar." });
+      }
+      const note = body.action === "reschedule" ? "Seguimiento reprogramado." : String(body.newComment || "").trim();
       if (!note) return reply(400, { error: "Contá brevemente qué hiciste para cerrar la gestión." });
       if (body.nextContact && !/^\d{4}-\d{2}-\d{2}$/.test(String(body.nextContact))) return reply(400, { error: "Elegí una fecha válida para el próximo contacto." });
       const followUpNote = body.nextContact ? `Próximo contacto programado para ${body.nextContact}.` : "Seguimiento cerrado.";
