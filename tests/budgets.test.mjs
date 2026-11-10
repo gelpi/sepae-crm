@@ -11,6 +11,8 @@ const { default: budgets } = await import("../netlify/functions/budgets.mjs");
 const { default: publicHandler } = await import("../netlify/functions/budget-public.mjs");
 const { default: sales } = await import("../netlify/functions/sales.mjs");
 const { default: contacts } = await import("../netlify/functions/contacts.mjs");
+const { default: createContact } = await import("../netlify/functions/contact-create.mjs");
+const { default: updateContact } = await import("../netlify/functions/contact-update.mjs");
 const { quoteOptions, validDay } = await import("../netlify/functions/_budget-core.mjs");
 
 function memorySheets() {
@@ -93,4 +95,25 @@ test("valida fechas, descuentos excluyentes y precios de los seis planes",()=>{
   const options=quoteOptions(calc,{...input,coverage:"msp",family:"pareja",options:[{hours:8,convalescence:true}]});
   assert.equal(options[0].discount,15,"institución excluye descuento familiar");assert.equal(options[0].monthly,1275);assert.equal(options[0].firstMonths,957);
   assert.throws(()=>quoteOptions(calc,{...input,options:[]}));
+});
+
+test("alta y edición exigen teléfono o dirección sin duplicados por teléfonos vacíos",async()=>{
+  const db=memorySheets();google.sheets=()=>db;
+  const base={name:"Persona de prueba",phone:"",address:"",document:"",locality:"Vergara"};
+  assert.equal((await call(createContact,"Ana",base)).status,400);
+  assert.equal((await call(createContact,"Ana",{...base,address:"   "})).status,400);
+  assert.equal((await call(createContact,"Ana",{...base,phone:"123",address:"Calle 123"})).status,400);
+  assert.equal((await call(createContact,"Ana",{...base,phone:"Sin teléfono",address:"Calle 123"})).status,400);
+  assert.equal((await call(createContact,"Ana",{...base,address:"  Calle 123  "})).status,201);
+  assert.equal((await call(createContact,"Ana",{...base,name:"Otra persona",address:"Calle 456"})).status,201);
+  assert.equal(db.tables.get("Respuestas de formulario 1")[2][3],"");
+  assert.equal(db.tables.get("Respuestas de formulario 1")[2][12],"Calle 123");
+  assert.equal((await call(createContact,"Ana",{...base,phone:"099123456"})).status,409,"mantiene detección de teléfonos repetidos");
+  assert.equal((await call(updateContact,"Ana",{...base,id:2})).status,400);
+  assert.equal((await call(updateContact,"Ana",{...base,id:2,phone:"abc",address:"Calle 123"})).status,400);
+  assert.equal((await call(updateContact,"Ana",{...base,id:2,address:"Calle nueva"})).status,200);
+  assert.equal(db.tables.get("Respuestas de formulario 1")[1][3],"");
+  assert.equal(db.tables.get("Respuestas de formulario 1")[1][12],"Calle nueva");
+  assert.equal((await call(updateContact,"Ana",{...base,id:2,phone:"+598 99 234 567"})).status,200);
+  assert.equal(db.tables.get("Respuestas de formulario 1")[1][3],"59899234567");
 });

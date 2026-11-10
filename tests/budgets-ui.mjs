@@ -15,6 +15,10 @@ await page.route("**/.netlify/functions/**",async route=>{
   if(name==="contacts")data={contacts:[contact],filters:{origins:["Web","Punto saludable"],types:["Sin clasificar","Tibio"],members:["No","Sí"],sellers:["Ana"]},metrics:{total:1}};
   if(name==="seller-dashboard")data={totals:{unclassified:0,noPhone:0,noBirthDate:1,noLocality:0},actions:{overdue:[{id:2,nombre:"Cliente Prueba",fecha:"2026-10-01"}],today:[],upcoming:[]}};
   if(name==="sales")data={total:1,sales:[{id:"s1",nombre:"Cliente Prueba",fecha:"2026-11-10"}]};
+  if(name==="contact-create"){
+    const body=route.request().postDataJSON();assert.equal(body.phone,"");assert.equal(body.address,"Calle de prueba 123");
+    contact.telefono="Sin teléfono";contact.direccion="Calle de prueba 123";data={ok:true};
+  }
   if(name==="budgets"){
     if(route.request().method()==="POST"){
       const body=route.request().postDataJSON();
@@ -37,7 +41,16 @@ try {
   await page.getByRole("heading",{name:"Contactos",exact:true}).waitFor();
   const newBox=await page.getByRole("button",{name:"Nuevo contacto"}).boundingBox(),searchBox=await page.getByPlaceholder("Buscar",{exact:true}).boundingBox();
   assert.ok(newBox.y+newBox.height<searchBox.y,"alta y buscador no se superponen");
+  await page.getByRole("button",{name:"Nuevo contacto"}).click();
+  await page.getByLabel("Nombre y apellido").fill("Persona sin teléfono");
+  assert.equal(await page.getByLabel("Teléfono (opcional si hay dirección)").inputValue(),"");
+  assert.equal(await page.getByLabel("Dirección (obligatoria sin teléfono)").getAttribute("required"),"");
+  await page.getByLabel("Dirección (obligatoria sin teléfono)").fill("Calle de prueba 123");
+  await page.getByRole("button",{name:"Guardar cambios"}).click();
+  await page.locator(".modal").waitFor({state:"detached"});
   await page.locator(".contact").click();
+  assert.equal(await page.getByLabel("Teléfono (opcional si hay dirección)").inputValue(),"","la etiqueta Sin teléfono no se carga como dato editable");
+  contact.telefono="099123456";
   await page.getByRole("button",{name:"Ver presupuestos"}).click();
   await page.getByRole("button",{name:/Cliente Prueba.*Emitido/}).click();
   await page.getByRole("button",{name:"Aprobar y registrar venta"}).click();
