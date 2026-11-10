@@ -6,5 +6,6 @@ dist
 .secrets/
 data/*.xlsx
 *.tsbuildinfo
+tests/*-preview.png
 vite.config.js
 vite.config.d.ts

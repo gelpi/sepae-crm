@@ -1,4 +1,5 @@
 import { currentUser, getSheets, LOCALITIES, reply, spreadsheetId } from "./_shared.mjs";
+import { readBudgets } from "./_budgets.mjs";
 
 const dateInputValue = (value) => {
   const text = String(value || "");
@@ -24,6 +25,8 @@ export default async (request) => {
     const result = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Respuestas de formulario 1!A2:P" });
     const salesResult = await sheets.spreadsheets.values.get({ spreadsheetId, range: "Ventas!A2:F" });
     const soldLeadIds = new Set((salesResult.data.values || []).map((row) => row[1]).filter(Boolean));
+    const budgets = await readBudgets(sheets);
+    budgets.entries.filter(({budget}) => budget.status === "Aprobado").forEach(({budget}) => soldLeadIds.add(budget.leadId));
     const allRows = (result.data.values ?? []).map((row, index) => ({ row, rowNumber: index + 2 }));
     const visibleRows = allRows.filter(({ row }) => (user.role === "admin" || String(row[1]).trim().toLowerCase() === String(user.seller).trim().toLowerCase()) && (deleted ? Boolean(row[9]) : !row[9]));
     const filteredRows = visibleRows.filter(({ row }) => {

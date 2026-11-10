@@ -19,16 +19,20 @@ function block(rows, service, age) {
   return [8, 16, 24].map((hours) => prices.get(hours));
 }
 
+export async function loadCalculator(sheets) {
+  const result = await sheets.spreadsheets.values.get({ spreadsheetId, range:"Calculadora!A1:F40" });
+  const rows = result.data.values || [];
+  return {
+    internacion:{ under55:block(rows, "INTERNACION", "under55"), over55:block(rows, "INTERNACION", "over55") },
+    convalecencia:{ under55:block(rows, "CONVALECENCIA", "under55"), over55:block(rows, "CONVALECENCIA", "over55") },
+    updatedAt:"Precios vigentes según Calculadora"
+  };
+}
+
 export default async (request) => {
   if (!currentUser(request)) return reply(401, { error:"Sesión no válida." });
   try {
     const sheets = getSheets();
-    const result = await sheets.spreadsheets.values.get({ spreadsheetId, range:"Calculadora!A1:F40" });
-    const rows = result.data.values || [];
-    return reply(200, {
-      internacion:{ under55:block(rows, "INTERNACION", "under55"), over55:block(rows, "INTERNACION", "over55") },
-      convalecencia:{ under55:block(rows, "CONVALECENCIA", "under55"), over55:block(rows, "CONVALECENCIA", "over55") },
-      updatedAt:"Precios vigentes según Calculadora"
-    });
+    return reply(200, await loadCalculator(sheets));
   } catch (error) { console.error("Calculator error", error); return reply(500, { error:"No se pudieron cargar los precios del cotizador." }); }
 };
